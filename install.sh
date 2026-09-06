@@ -64,6 +64,14 @@ secure_config_dir() {
     if [ -L "$TOKEN_FILE" ]; then
         fail "Die GitHub-Token-Datei darf kein symbolischer Link sein: $TOKEN_FILE"
     fi
+    if [ -e "$TOKEN_FILE" ] && [ ! -f "$TOKEN_FILE" ]; then
+        fail "Die GitHub-Token-Datei muss eine reguläre Datei sein: $TOKEN_FILE"
+    fi
+    if [ -f "$TOKEN_FILE" ]; then
+        chmod 600 "$TOKEN_FILE" \
+            || fail "Die Dateirechte des vorhandenen GitHub Tokens konnten nicht gehärtet werden."
+        chown root:root "$TOKEN_FILE" 2>/dev/null || true
+    fi
 }
 
 read_secret_from_tty() {
@@ -101,7 +109,6 @@ build_curl_config() {
         printf 'silent\n'
         printf 'show-error\n'
         printf 'fail\n'
-        printf 'location\n'
         printf 'header = "Authorization: Bearer %s"\n' "$token"
         printf 'header = "Accept: application/vnd.github.raw+json"\n'
         printf 'header = "X-GitHub-Api-Version: 2022-11-28"\n'
@@ -137,6 +144,7 @@ main() {
     [ -n "$BRANCH" ] || fail "Der Branch darf nicht leer sein."
 
     if [ -s "$TOKEN_FILE" ]; then
+        [ -r "$TOKEN_FILE" ] || fail "Die vorhandene GitHub-Token-Datei ist nicht lesbar: $TOKEN_FILE"
         token="$(cat "$TOKEN_FILE")"
         [ -n "$token" ] || fail "Die vorhandene GitHub-Token-Datei ist leer: $TOKEN_FILE"
         info "Vorhandener GitHub Fine-grained Token wird sicher wiederverwendet."
@@ -153,7 +161,9 @@ main() {
     cleanup() {
         rm -f "$curl_config" "$private_bootstrap"
     }
-    trap cleanup EXIT INT TERM HUP
+    trap cleanup EXIT
+    trap 'exit 130' INT
+    trap 'exit 143' TERM HUP
 
     build_curl_config "$curl_config" "$token"
 
