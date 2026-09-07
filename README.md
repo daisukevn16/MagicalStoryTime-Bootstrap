@@ -2,7 +2,7 @@
 
 Öffentlicher Minimal-Installer für das private Repository `daisukevn16/MagicalStoryTime`.
 
-Aktuelle Bootstrap-Version: `v0.1.0-alpha`
+Aktuelle Bootstrap-Version: `v0.1.1-alpha`
 
 Dieses Repository enthält **keinen MagicalStoryTime-Anwendungscode und keine Secrets**. `install.sh` stellt nur den sicheren Erstkontakt zum privaten Repository her und übergibt anschließend an die dort versionierte `Bootstrap.sh` und `Updater.sh`.
 
@@ -40,7 +40,7 @@ Optional kann als zweites Argument eine erwartete MagicalStoryTime-Version über
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/daisukevn16/MagicalStoryTime-Bootstrap/main/install.sh \
-  | sudo bash -s -- agent/item-link-definitions-280 v0.7.1031-alpha
+  | sudo bash -s -- agent/item-link-definitions-280 v0.7.1042-alpha
 ```
 
 ## Was der öffentliche Installer macht
@@ -61,6 +61,7 @@ curl -fsSL https://raw.githubusercontent.com/daisukevn16/MagicalStoryTime-Bootst
 - Der Token wird nicht in der Git-Remote-URL gespeichert.
 - Der Authorization-Header wird nicht als sichtbares curl-Kommandozeilenargument übergeben.
 - Temporäre curl-Konfigurationen und Bootstrap-Dateien werden mit restriktiven Rechten angelegt und nach dem Lauf entfernt.
+- Der restriktive `umask` für Secret-Dateien ist auf den jeweiligen Schreibvorgang begrenzt und wird nicht in den privaten Repository-Checkout vererbt.
 - Ein neu eingegebener Token wird erst gespeichert, nachdem der authentifizierte Zugriff auf die private `Bootstrap.sh` erfolgreich war.
 - Eine bereits vorhandene Token-Datei wird bei einem Fehler nicht automatisch gelöscht oder überschrieben.
 - Der öffentliche Installer führt keine Docker-/Portainer-Deploymentlogik selbst aus; diese Verantwortung bleibt im privaten, versionierten MagicalStoryTime-Repository.
