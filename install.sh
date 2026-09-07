@@ -94,8 +94,8 @@ persist_token() {
 
     if ! (
         umask 077
-        printf '%s' "$token" >"$TOKEN_FILE" \
-            && chmod 600 "$TOKEN_FILE"
+        printf '%s' "$token" >"$TOKEN_FILE" || exit 1
+        chmod 600 "$TOKEN_FILE" || exit 1
         chown root:root "$TOKEN_FILE" 2>/dev/null || true
     ); then
         fail "Der GitHub Token kann nicht sicher gespeichert werden: $TOKEN_FILE"
@@ -115,8 +115,8 @@ build_curl_config() {
             printf 'header = "Authorization: Bearer %s"\n' "$token"
             printf 'header = "Accept: application/vnd.github.raw+json"\n'
             printf 'header = "X-GitHub-Api-Version: 2022-11-28"\n'
-        } >"$config_file"
-        chmod 600 "$config_file"
+        } >"$config_file" || exit 1
+        chmod 600 "$config_file" || exit 1
     ); then
         fail "Die temporäre curl-Konfiguration konnte nicht sicher erstellt werden."
     fi
