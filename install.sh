@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-BOOTSTRAP_VERSION="v0.1.0-alpha"
+BOOTSTRAP_VERSION="v0.1.1-alpha"
 PRIVATE_REPO="daisukevn16/MagicalStoryTime"
 PRIVATE_BOOTSTRAP_API="https://api.github.com/repos/${PRIVATE_REPO}/contents/Bootstrap.sh"
 CONFIG_DIR="${MST_CONFIG_DIR:-/etc/magical-story-time}"
@@ -92,28 +92,34 @@ read_secret_from_tty() {
 persist_token() {
     local token="$1"
 
-    umask 077
-    printf '%s' "$token" >"$TOKEN_FILE" \
-        || fail "Der GitHub Token kann nicht gespeichert werden: $TOKEN_FILE"
-    chmod 600 "$TOKEN_FILE" \
-        || fail "Die Dateirechte des GitHub Tokens konnten nicht gesetzt werden."
-    chown root:root "$TOKEN_FILE" 2>/dev/null || true
+    if ! (
+        umask 077
+        printf '%s' "$token" >"$TOKEN_FILE" \
+            && chmod 600 "$TOKEN_FILE"
+        chown root:root "$TOKEN_FILE" 2>/dev/null || true
+    ); then
+        fail "Der GitHub Token kann nicht sicher gespeichert werden: $TOKEN_FILE"
+    fi
 }
 
 build_curl_config() {
     local config_file="$1"
     local token="$2"
 
-    umask 077
-    {
-        printf 'silent\n'
-        printf 'show-error\n'
-        printf 'fail\n'
-        printf 'header = "Authorization: Bearer %s"\n' "$token"
-        printf 'header = "Accept: application/vnd.github.raw+json"\n'
-        printf 'header = "X-GitHub-Api-Version: 2022-11-28"\n'
-    } >"$config_file"
-    chmod 600 "$config_file"
+    if ! (
+        umask 077
+        {
+            printf 'silent\n'
+            printf 'show-error\n'
+            printf 'fail\n'
+            printf 'header = "Authorization: Bearer %s"\n' "$token"
+            printf 'header = "Accept: application/vnd.github.raw+json"\n'
+            printf 'header = "X-GitHub-Api-Version: 2022-11-28"\n'
+        } >"$config_file"
+        chmod 600 "$config_file"
+    ); then
+        fail "Die temporäre curl-Konfiguration konnte nicht sicher erstellt werden."
+    fi
 }
 
 validate_private_bootstrap() {
